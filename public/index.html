@@ -1,178 +1,267 @@
 <!DOCTYPE html>
-<html>
+<html lang="bn">
 <head>
-    <title>100% LinkedIn Checker</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 LinkedIn Finder Tool</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+        .container {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            animation: slideUp 0.8s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        h1 {
+            text-align: center;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 10px #ff6b6b); }
+            to { filter: drop-shadow(0 0 20px #4ecdc4); }
+        }
+        .step {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            transform: translateX(-20px);
+            opacity: 0;
+            animation: slideIn 0.6s ease forwards;
+        }
+        .step.active { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .step.show { transform: translateX(0); opacity: 1; }
+        @keyframes slideIn { to { transform: translateX(0); opacity: 1; } }
+        input, textarea, button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+        input:focus, textarea:focus { 
+            outline: none;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+            transform: scale(1.02);
+        }
+        .api-key { background: linear-gradient(135deg, #ffeaa7, #fab1a0); }
+        textarea { height: 120px; resize: vertical; }
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        button:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        
+        .progress-container { 
+            width: 100%; 
+            height: 8px; 
+            background: #e0e0e0; 
+            border-radius: 10px; 
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+            position: relative;
+        }
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        
+        .results { margin-top: 30px; }
+        .result-item {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: fadeInUp 0.5s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .success { border-left: 5px solid #00b894; }
+        .fail { border-left: 5px solid #e17055; opacity: 0.8; }
+        .linkedin-link { 
+            color: #0984e3; 
+            text-decoration: none; 
+            font-weight: bold;
+            padding: 10px 15px;
+            background: linear-gradient(135deg, #a8e6cf, #dcedc1);
+            border-radius: 25px;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+        .linkedin-link:hover { transform: scale(1.05); }
+        .layers { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 5px; 
+            margin: 10px 0;
+        }
+        .layer { 
+            padding: 5px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: bold;
+        }
+        .layer.success { background: #00b894; color: white; }
+        .layer.fail { background: #e17055; color: white; opacity: 0.8; }
+        
+        @media (max-width: 768px) {
+            .container { padding: 20px; margin: 20px; }
+            h1 { font-size: 2em; }
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 min-h-screen">
-    <div class="container mx-auto px-6 py-12 max-w-4xl">
-        <!-- Header -->
-        <div class="text-center mb-12">
-            <h1 class="text-5xl font-bold bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent mb-4">
-                🔍 LinkedIn Account Checker
-            </h1>
-            <p class="text-xl text-white/90 max-w-2xl mx-auto">
-                100% Accurate - Multiple sources validation
-            </p>
+<body>
+    <div class="container">
+        <h1>🔍 LinkedIn Finder</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">
+            Email দিয়ে LinkedIn profile খুঁজে বের করুন (4 Layer + Apollo)
+        </p>
+        
+        <div id="step1" class="step show">
+            <h3>📋 Step 1: Apollo API Key দিন</h3>
+            <input type="text" id="apolloKey" class="api-key" placeholder="apollo.io এর API Key paste করুন...">
+            <button onclick="startStep2()">পরবর্তী →</button>
         </div>
-
-        <!-- Input -->
-        <div class="bg-white/20 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-white/30">
-            <label class="block text-2xl font-semibold mb-6 text-white">📧 Emails (one per line)</label>
-            <textarea id="emails" rows="6" 
-                class="w-full p-6 text-lg border-2 border-white/30 rounded-2xl bg-white/80 focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-200 resize-vertical font-mono"
-                placeholder="john.doe@company.com
-jane.smith@gmail.com
-mike@startup.io"></textarea>
+        
+        <div id="step2" class="step" style="display: none;">
+            <h3>📧 Step 2: Email List দিন</h3>
+            <textarea id="emails" placeholder="একাধিক email line by line দিন:
+example@gmail.com
+test@company.com
+user@business.com"></textarea>
+            <button onclick="startProcessing()" id="processBtn">🚀 Start Finding</button>
         </div>
-
-        <!-- Check Button -->
-        <button onclick="checkLinkedIn()" 
-            class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white py-6 px-8 rounded-3xl text-2xl font-bold shadow-2xl hover:shadow-3xl transform hover:-translate-y-2 transition-all duration-300 mb-8">
-            🚀 Check LinkedIn Accounts (FREE)
-        </button>
-
-        <!-- Loading -->
-        <div id="loading" class="hidden flex flex-col items-center p-12 mb-8">
-            <div class="animate-spin rounded-full h-16 w-16 border-4 border-white/30 border-t-emerald-400 mb-6"></div>
-            <div class="text-2xl font-bold text-white mb-4">Scanning with 3+ sources...</div>
-            <div class="grid grid-cols-3 gap-4 text-white text-lg">
-                <div class="flex items-center"><span class="w-4 h-4 bg-green-400 rounded-full mr-3 animate-pulse"></span>Google Dork</div>
-                <div class="flex items-center"><span class="w-4 h-4 bg-blue-400 rounded-full mr-3 animate-pulse" style="animation-delay:0.2s"></span>Pattern Match</div>
-                <div class="flex items-center"><span class="w-4 h-4 bg-purple-400 rounded-full mr-3 animate-pulse" style="animation-delay:0.4s"></span>Domain Analysis</div>
+        
+        <div id="processing" style="display: none;">
+            <h3>⚡ Processing...</h3>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
             </div>
+            <div id="currentEmail" style="text-align: center; margin: 20px 0; font-size: 18px;"></div>
+            <div id="credits" style="text-align: center; color: #666;"></div>
         </div>
-
-        <!-- Results -->
-        <div id="results" class="hidden bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden">
-            <!-- Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 p-8 bg-gradient-to-r from-emerald-500 to-teal-600 text-white">
-                <div class="text-center">
-                    <div class="text-4xl font-bold" id="total">0</div>
-                    <div class="text-lg opacity-90 mt-1">Total Checked</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-4xl font-bold" id="found">0</div>
-                    <div class="text-lg opacity-90 mt-1">Has LinkedIn</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-4xl font-bold" id="notfound">0</div>
-                    <div class="text-lg opacity-90 mt-1">No LinkedIn</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-4xl font-bold" id="avgConfidence">0%</div>
-                    <div class="text-lg opacity-90 mt-1">Accuracy</div>
-                </div>
-            </div>
-
-            <!-- Table -->
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="p-6 text-left font-bold text-lg">#</th>
-                            <th class="p-6 text-left font-bold text-lg">Email</th>
-                            <th class="p-6 text-left font-bold text-lg">Status</th>
-                            <th class="p-6 text-left font-bold text-lg">Confidence</th>
-                            <th class="p-6 text-left font-bold text-lg">Sources</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
-            </div>
-
-            <!-- Export -->
-            <div class="p-8 bg-gray-50">
-                <button onclick="exportCSV()" 
-                    class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-4 px-8 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all">
-                    💾 Export Results (CSV)
-                </button>
-            </div>
-        </div>
+        
+        <div id="results" class="results" style="display: none;"></div>
     </div>
 
     <script>
-        let resultsData = [];
-
-        async function checkLinkedIn() {
-            const emails = document.getElementById('emails').value
-                .trim()
-                .split('\n')
-                .map(e => e.trim())
-                .filter(e => e.length > 5);
-
-            if (emails.length === 0) {
-                alert('অল্প কম emails দাও! (5+ chars)');
+        let currentStep = 1;
+        let isProcessing = false;
+        let currentIndex = 0;
+        let totalEmails = 0;
+        
+        async function startStep2() {
+            const apolloKey = document.getElementById('apolloKey').value.trim();
+            if (!apolloKey) {
+                alert('Apollo API Key দিন!');
                 return;
             }
-
-            document.getElementById('loading').classList.remove('hidden');
-            document.querySelector('button[onclick="checkLinkedIn()"]').disabled = true;
-
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'block';
+            document.getElementById('step2').classList.add('show');
+        }
+        
+        async function startProcessing() {
+            const emailsText = document.getElementById('emails').value.trim();
+            if (!emailsText) {
+                alert('Email list দিন!');
+                return;
+            }
+            
+            const emails = emailsText.split('\n').map(e => e.trim()).filter(e => e);
+            totalEmails = emails.length;
+            
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('processing').style.display = 'block';
+            isProcessing = true;
+            
+            const apolloKey = document.getElementById('apolloKey').value.trim();
+            
             try {
-                const response = await fetch('/api/check-linkedin', {
+                const response = await fetch('/api/check-emails', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ emails })
+                    body: JSON.stringify({ emails, apolloKey })
                 });
-
-                resultsData = await response.json();
-                showResults();
-            } catch (e) {
-                alert('Server error! Render deploy hoyeche?');
+                
+                const { results, apolloCredits } = await response.json();
+                
+                document.getElementById('processing').style.display = 'none';
+                document.getElementById('results').style.display = 'block';
+                showResults(results, apolloCredits);
+                
+            } catch (error) {
+                alert('Error: ' + error.message);
             }
-
-            document.getElementById('loading').classList.add('hidden');
-            document.querySelector('button[onclick="checkLinkedIn()"]').disabled = false;
         }
-
-        function showResults() {
-            const hasLinkedIn = resultsData.filter(r => r.hasLinkedIn).length;
-            const total = resultsData.length;
-            const avgConf = Math.round(resultsData.reduce((a, b) => a + b.confidence, 0) / total);
-
-            document.getElementById('total').textContent = total;
-            document.getElementById('found').textContent = hasLinkedIn;
-            document.getElementById('notfound').textContent = total - hasLinkedIn;
-            document.getElementById('avgConfidence').textContent = `${avgConf}%`;
-
-            document.getElementById('tableBody').innerHTML = resultsData.map((r, i) => `
-                <tr class="hover:bg-gray-50 border-b">
-                    <td class="p-6 font-bold">${i+1}</td>
-                    <td class="p-6 font-mono bg-gray-100 px-4 py-2 rounded-xl">${r.email}</td>
-                    <td class="p-6">
-                        ${r.hasLinkedIn ? 
-                            '<span class="px-6 py-3 bg-emerald-200 text-emerald-800 rounded-2xl font-bold text-lg">✅ HAS LINKEDIN</span>' :
-                            '<span class="px-6 py-3 bg-red-200 text-red-800 rounded-2xl font-bold text-lg">❌ NO LINKEDIN</span>'
+        
+        function showResults(results, credits) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <h3>✅ Results Found (${results.filter(r => r.linkedin).length}/${results.length})</h3>
+                <p><strong>Apollo Credits Left:</strong> ${credits}</p>
+                ${results.map((result, index) => `
+                    <div class="result-item ${result.linkedin ? 'success' : 'fail'}">
+                        <h4>${result.email}</h4>
+                        ${result.linkedin ? 
+                            `<a href="${result.linkedin}" target="_blank" class="linkedin-link">🔗 ${result.linkedin}</a>` : 
+                            '<p style="color: #e17055;">❌ LinkedIn Profile পাওয়া যায়নি</p>'
                         }
-                    </td>
-                    <td class="p-6">
-                        <div class="w-24 bg-gradient-to-r from-blue-400 to-emerald-400 text-white px-4 py-2 rounded-full font-bold text-sm">
-                            ${r.confidence}%
+                        <div class="confidence">Confidence: ${result.confidence}%</div>
+                        <div class="layers">
+                            ${result.layers.map(layer => `<span class="layer success">${layer}</span>`).join('')}
+                            ${result.failedLayers.map(layer => `<span class="layer fail">${layer} ✗</span>`).join('')}
                         </div>
-                    </td>
-                    <td class="p-6 text-sm text-gray-600">${r.sources.join(', ') || '-'}</td>
-                </tr>
-            `).join('');
-
-            document.getElementById('results').classList.remove('hidden');
-            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function exportCSV() {
-            const csv = 'Sl,Email,Has_LinkedIn,Confidence,Sources\n' + 
-                resultsData.map((r,i) => `${i+1},"${r.email}",${r.hasLinkedIn},${r.confidence},"${r.sources.join('; ')}"`).join('\n');
-            
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `linkedin-results-${new Date().toISOString().slice(0,10)}.csv`;
-            a.click();
+                    </div>
+                `).join('')}
+            `;
         }
     </script>
 </body>
